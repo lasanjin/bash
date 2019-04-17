@@ -28,6 +28,91 @@ if [ -z $jq ]; then
 fi
 
 
+
+
+#expressen menu 
+#$1: <#days from today>
+#$2: <language>, s for swedish, default is english
+lunch() {
+	#number of days from today
+	local ndays=0
+
+	#check if input null 
+	if [ ! -z $1 ]; then
+		ndays=$1
+
+		#check if input digit or negative
+		if ! [[ "$1" =~ ^[0-9]*$ ]] || [ $1 -lt 0 ]; then
+			echo -e "\nInvalid input\n"
+			return 0
+		fi
+
+	fi
+
+	local today=$(date +'%Y-%m-%d')
+	local end_date=$(date -d "$today+$ndays days" +'%Y-%m-%d')
+
+	#api url
+	expressen_api_url
+	local URL=''$url'?startDate='$today'&endDate='$end_date''
+
+	#get data
+	get_expressen_data "$URL" "$2"
+	local data=$expressen_data
+	if [ -z "$data" ]; then
+		echo -e "\nNo data\n"
+		return 0
+	fi
+	
+	#store data in array
+	IFS=$'\n' read -r -a arr -d '' <<< "$data"
+
+	#styling
+	local default='\e[0m'
+	local blink='\e[39m\e[5m'
+	local green='\n\e[1m\e[32m'
+
+	local length=${#arr[@]}
+	local temp=''
+	#data is stored: [date0, meat0, date0, veg0, date1, meat1, date1, veg1, ...]
+	for ((i=0; i<$length; i+=2))
+	do
+		#trim citation
+		local date=${arr[i]:1:-1}
+		local food=${arr[$((i+1))]:1:-1}
+
+	if [ "$date" != "null" ] && [ "$food" != "null" ]; then
+		if [ "$date" != "$temp" ]; then
+		
+		
+			if [ "$2" == "s" ]; then
+				#swedish
+				echo -e "$green$(LC_TIME=sv_SE.utf-8 date --date "$date" +'%A')$default:"
+			else
+				#english
+				echo -e "$green$(date --date "$date" +'%A')$default:"
+			fi
+
+			temp=$date
+		fi
+
+		#is it meatballs?
+		is_it_meatballs "$food" "$2"
+		index=$index
+		end="$(echo "$ingredient" | awk '{print length}')"
+	
+		if [[ ! -z "$index" ]]; then
+		
+			echo -e "$blink${food:$index:$end}$default${food:$end}"
+		else
+			echo -e "$food"
+		fi
+	fi
+	done
+
+	echo -e ""
+}
+
 #expressen data, standard lang: eng
 #optional: download jq library for linux/mac and replace $jq with jq
 get_expressen_data() {
@@ -37,7 +122,7 @@ get_expressen_data() {
 		lang=0
 	fi
 
-	expressen_data=$(curl -s $1 | jq '.[] | .startDate, .displayNames['$lang'].dishDisplayName')
+	expressen_data=$(curl -s $1 | $jq '.[] | .startDate, .displayNames['$lang'].dishDisplayName')
 }
 
 #expressen api
@@ -57,90 +142,11 @@ is_it_meatballs() {
 	index="$(echo "$capital" | grep -b -o "$ingredient" | awk 'BEGIN {FS=":"}{print $1}')"
 }
 
-#expressen menu 
-#$1: £days from today
-#$2: language swe/eng, default is swe
-lunch() {
-#number of days from today
-local ndays=0
 
-#check if input null 
-if [ ! -z $1 ]; then
-	ndays=$1
 
-	#check if input digit or negative
-	if ! [[ "$1" =~ ^[0-9]*$ ]] || [ $1 -lt 0 ]; then
-		echo -e "\nInvalid input\n"
-		return 0
-	fi
 
-fi
-
-local today=$(date +'%Y-%m-%d')
-local end_date=$(date -d "$today+$ndays days" +'%Y-%m-%d')
-
-#api url
-expressen_api_url
-local URL=''$url'?startDate='$today'&endDate='$end_date''
-
-#get data
-get_expressen_data "$URL" "$2"
-local data=$expressen_data
-if [ -z "$data" ]; then
-	echo -e "\nNo data\n"
-	return 0
-fi
-	
-#store data in array
-IFS=$'\n' read -r -a arr -d '' <<< "$data"
-
-#styling
-local default='\e[0m'
-local blink='\e[39m\e[5m'
-local green='\n\e[1m\e[32m'
-
-local length=${#arr[@]}
-local temp=''
-#data is stored: [date0, meat0, date0, veg0, date1, meat1, date1, veg1, ...]
-for ((i=0; i<$length; i+=2))
-do
-	#trim citation
-	local date=${arr[i]:1:-1}
-	local food=${arr[$((i+1))]:1:-1}
-
-if [ "$date" != "null" ] && [ "$food" != "null" ]; then
-	if [ "$date" != "$temp" ]; then
-		
-		
-		if [ "$2" == "s" ]; then
-			#swedish
-			echo -e "$green$(LC_TIME=sv_SE.utf-8 date --date "$date" +'%A')$default:"
-		else
-			#english
-			echo -e "$green$(date --date "$date" +'%A')$default:"
-		fi
-
-		temp=$date
-	fi
-
-	#is it meatballs?
-	is_it_meatballs "$food" "$2"
-	index=$index
-	end="$(echo "$ingredient" | awk '{print length}')"
-	
-	if [[ ! -z "$index" ]]; then
-		
-		echo -e "$blink${food:$index:$end}$default${food:$end}"
-	else
-		echo -e "$food"
-	fi
-fi
-done
-echo -e ""
-}
-
-#executes function with input:
-# $1: '#days from today'
-# $2: 'language', e for english, s for swedish
-# default is 0 days and english
+#this script executes function 'lunch' with input:
+# $1: <#days from today>
+# $2: <language>, s for swedish
+# default is 0 days (today) and english
 lunch $1 $2
