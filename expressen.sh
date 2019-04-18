@@ -1,4 +1,4 @@
- #!/bin/bash 
+#!/bin/bash
 
 #get jq filename
 jq=$(find . -maxdepth 1 -name "*jq*")
@@ -11,7 +11,7 @@ if [ -z $jq ]; then
 	echo "Downloading jq..."
 
 	#linux
-	if [[ "$os" == "linux-gnu" ]]; then		
+	if [[ "$os" == "linux-gnu" ]]; then
 		wget -q https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
 	#mac
 	elif [[ "$os" == "darwin"* ]]; then
@@ -27,17 +27,14 @@ if [ -z $jq ]; then
 	sudo chmod +x ${jq:2}
 fi
 
-
-
-
-#expressen menu 
+#expressen menu
 #$1: <#days from today>
 #$2: <language>, s for swedish, default is english
 lunch() {
 	#number of days from today
 	local ndays=0
 
-	#check if input null 
+	#check if input null
 	if [ ! -z $1 ]; then
 		ndays=$1
 
@@ -63,9 +60,9 @@ lunch() {
 		echo -e "\nNo data\n"
 		return 0
 	fi
-	
+
 	#store data in array
-	IFS=$'\n' read -r -a arr -d '' <<< "$data"
+	IFS=$'\n' read -r -a arr -d '' <<<"$data"
 
 	#styling
 	local default='\e[0m'
@@ -75,39 +72,37 @@ lunch() {
 	local length=${#arr[@]}
 	local temp=''
 	#data is stored: [date0, meat0, date0, veg0, date1, meat1, date1, veg1, ...]
-	for ((i=0; i<$length; i+=2))
-	do
+	for ((i = 0; i < $length; i += 2)); do
 		#trim citation
 		local date=${arr[i]:1:-1}
-		local food=${arr[$((i+1))]:1:-1}
+		local food=${arr[$((i + 1))]:1:-1}
 
-	if [ "$date" != "null" ] && [ "$food" != "null" ]; then
-		if [ "$date" != "$temp" ]; then
-		
-		
-			if [ "$2" == "s" ]; then
-				#swedish
-				echo -e "$green$(LC_TIME=sv_SE.utf-8 date --date "$date" +'%A')$default:"
-			else
-				#english
-				echo -e "$green$(date --date "$date" +'%A')$default:"
+		if [ "$date" != "null" ] && [ "$food" != "null" ]; then
+			if [ "$date" != "$temp" ]; then
+
+				if [ "$2" == "s" ]; then
+					#swedish
+					echo -e "$green$(LC_TIME=sv_SE.utf-8 date --date "$date" +'%A')$default:"
+				else
+					#english
+					echo -e "$green$(date --date "$date" +'%A')$default:"
+				fi
+
+				temp=$date
 			fi
 
-			temp=$date
-		fi
+			#is it meatballs?
+			is_it_meatballs "$food" "$2"
+			index=$index
+			end="$(echo "$ingredient" | awk '{print length}')"
 
-		#is it meatballs?
-		is_it_meatballs "$food" "$2"
-		index=$index
-		end="$(echo "$ingredient" | awk '{print length}')"
-	
-		if [[ ! -z "$index" ]]; then
-		
-			echo -e "$blink${food:$index:$end}$default${food:$end}"
-		else
-			echo -e "$food"
+			if [[ ! -z "$index" ]]; then
+
+				echo -e "$blink${food:$index:$end}$default${food:$end}"
+			else
+				echo -e "$food"
+			fi
 		fi
-	fi
 	done
 
 	echo -e ""
@@ -131,7 +126,7 @@ expressen_api_url() {
 	url='http://carbonateapiprod.azurewebsites.net/api/'$api''
 }
 
-#return index if string contains 'MEATBALLS' or 'KöTTBULLAR' 
+#return index if string contains 'MEATBALLS' or 'KöTTBULLAR'
 is_it_meatballs() {
 	ingredient='MEATBALLS'
 	if [ "$2" == "s" ]; then
@@ -141,9 +136,6 @@ is_it_meatballs() {
 	local capital="$(echo "$1" | tr a-z A-Z)"
 	index="$(echo "$capital" | grep -b -o "$ingredient" | awk 'BEGIN {FS=":"}{print $1}')"
 }
-
-
-
 
 #this script executes function 'lunch' with input:
 # $1: <#days from today>
