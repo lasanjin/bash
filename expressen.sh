@@ -43,7 +43,6 @@ lunch() {
 			echo -e "\nInvalid input\n"
 			return 0
 		fi
-
 	fi
 
 	local today=$(date +'%Y-%m-%d')
@@ -62,7 +61,7 @@ lunch() {
 	fi
 
 	#store data in array
-	IFS=$'\n' read -r -a arr -d '' <<<"$data"
+	IFS=$'\n' read -r -a arr -d '' <<< "$data"
 
 	#styling
 	local default='\e[0m'
@@ -73,13 +72,13 @@ lunch() {
 	local temp=''
 	#data is stored: [date0, meat0, date0, veg0, date1, meat1, date1, veg1, ...]
 	for ((i = 0; i < $length; i += 2)); do
+
 		#trim citation
 		local date=${arr[i]:1:-1}
 		local food=${arr[$((i + 1))]:1:-1}
 
 		if [ "$date" != "null" ] && [ "$food" != "null" ]; then
 			if [ "$date" != "$temp" ]; then
-
 				if [ "$2" == "s" ]; then
 					#swedish
 					echo -e "$green$(LC_TIME=sv_SE.utf-8 date --date "$date" +'%A')$default:"
@@ -91,13 +90,11 @@ lunch() {
 				temp=$date
 			fi
 
-			#is it meatballs?
 			is_it_meatballs "$food" "$2"
 			index=$index
 			end="$(echo "$ingredient" | awk '{print length}')"
 
 			if [[ ! -z "$index" ]]; then
-
 				echo -e "$blink${food:$index:$end}$default${food:$end}"
 			else
 				echo -e "$food"
