@@ -45,7 +45,8 @@ lunch() {
 		fi
 	fi
 
-	local today=$(date +'%Y-%m-%d')
+	local today='2019-04-15'
+	#$(date +'%Y-%m-%d')
 	local end_date=$(date -d "$today+$ndays days" +'%Y-%m-%d')
 
 	#api url

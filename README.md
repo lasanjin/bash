@@ -1,15 +1,18 @@
 ## Description
 Outputs Chalmers expressen lunch in terminal & highlights "Meatballs" or "Köttbullar". 
 
-### Linux > macOS
-Does NOT work for macOS ATM --> Try using optional installation instead until further notice.
+<img src="expressen-GIF.gif" width="600">
+<br/>
 
-## How to install
+
+**OBS** Does NOT work for macOS ATM --> Try using optional installation instead until further notice.
+
+## How to run
+1. 
 ```
 $ sudo chmod +x ./expressen.sh
 ```
-
-## How to run
+2. 
 ```
 $ ./expressen.sh $1 $2
 ```
