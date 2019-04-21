@@ -2,8 +2,6 @@
 Outputs Chalmers expressen lunch in terminal & highlights "Meatballs" or "Köttbullar". 
 
 <img src="expressen-GIF.gif" width="600">
-<br/>
-
 
 **OBS** Does NOT work for macOS ATM --> Try using optional installation instead until further notice.
 
