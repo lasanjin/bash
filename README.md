@@ -8,11 +8,11 @@ Outputs Chalmers expressen lunch in terminal & highlights "Meatballs" or "Köttb
 **OBS** Does NOT work for macOS ATM --> Try using optional installation instead until further notice.
 
 ## How to run
-1. 
+1. Make script executable
 ```
 $ sudo chmod +x ./expressen.sh
 ```
-2. 
+2. Run script
 ```
 $ ./expressen.sh $1 $2
 ```
