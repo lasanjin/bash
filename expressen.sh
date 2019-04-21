@@ -55,25 +55,22 @@ lunch() {
 	#get data
 	expressen_data "$URL" "$2"
 	local data=$expressen_data
+
 	if [ -z "$data" ]; then
 		echo -e "\nNo data\n"
 		return 0
 	fi
 
-	#IFS (internal field separator) variable is used to determine what characters 
-	#Bash defines as words boundaries when processing character strings.
-	IFS=$'\n'
-	
 	#store data in array
-	read -r -a arr -d '' <<<"$data"
-	
-	#reset back to default value
-	unset IFS
+	toarray "$data"
+	arr=$arr
 
 	style
+	local lang='sv_SE.utf-8'
 	local length=${#arr[@]}
 	local temp=''
-	#data is stored: [date0, meat0, date0, veg0, date1, meat1, date1, veg1, ...]
+	#data is stored: [date0, meat0, date0, veg0, date1, meat1, date1, veg1, ...],
+	# because of shitty json
 	for ((i = 0; i < $length; i += 2)); do
 
 		#trim citation
@@ -84,10 +81,10 @@ lunch() {
 			if [ "$date" != "$temp" ]; then
 				if [ "$2" == "s" ]; then
 					#swedish
-					echo -e "\n$bold$green$(LC_TIME=sv_SE.utf-8 date --date "$date" +'%A')$default:"
+					echo -e "\n${bold}${green}$(LC_TIME=$lang date --date "$date" +'%A')$default:"
 				else
 					#english
-					echo -e "\n$bold$green$(date --date "$date" +'%A')$default:"
+					echo -e "\n${bold}${green}$(date --date "$date" +'%A')$default:"
 				fi
 
 				temp=$date
@@ -98,7 +95,7 @@ lunch() {
 			end="$(echo $ingredient | awk '{print length}')"
 
 			if [[ ! -z "$index" ]]; then
-				echo -e "$blink$bold$red${food:$index:$end}$default${food:$end}"
+				echo -e "${blink}${bold}${red}${food:$index:$end}${default}${food:$end}"
 			else
 				echo -e "$food"
 			fi
@@ -134,6 +131,20 @@ is_it_meatballs() {
 
 	local capital="$(echo $1 | tr a-z A-Z)"
 	index="$(echo $capital | grep -b -o $ingredient | awk 'BEGIN {FS=":"}{print $1}')"
+}
+
+#date is stored as '4/23/2019 12:00:00 AM' in shitty json,
+#which is a not valid format
+toarray() {
+	#IFS (internal field separator) variable is used to determine what characters
+	#bash defines as words boundaries when processing character strings.
+	IFS=$'\n'
+
+	#store data in array
+	read -r -a arr -d '' <<<"$data"
+
+	#reset back to default value
+	unset IFS
 }
 
 style() {
