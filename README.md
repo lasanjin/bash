@@ -15,7 +15,7 @@ Alt 2
 ```
 $ wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
 ```
-2. Make scripts executable
+2. Make script executable
 ```
 $ sudo chmod +x ./jq-linux64.sh 
 ```
@@ -23,7 +23,7 @@ $ sudo chmod +x ./jq-linux64.sh
 
 
 ## How to run
-1. Make scripts executable
+1. Make script executable
 ```
 $ sudo chmod +x ./expressen.sh 
 ```
