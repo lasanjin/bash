@@ -1,63 +1,35 @@
 #!/bin/bash
 
-#get jq filename
-jq=$(find . -maxdepth 1 -name "*jq*")
-
-#check if jq is downloaded
-if [ -z $jq ]; then
-	#get os
-	os=$OSTYPE
-
-	echo "Downloading jq..."
-
-	#linux
-	if [[ "$os" == "linux-gnu" ]]; then
-		wget -q https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-	#mac
-	elif [[ "$os" == "darwin"* ]]; then
-		curl -o jq-osx-amd64 https://github.com/stedolan/jq/releases/download/jq-1.6/jq-osx-amd64
-	fi
-
-	echo -e "\nDownload complete\n"
-
-	#get jq filename
-	jq=$(find . -maxdepth 1 -name "*jq*")
-
-	#trim jq filename and make file executable
-	sudo chmod +x ${jq:2}
-fi
-
 #expressen menu
 #$1: <#days from today>
-#$2: <language>, s for swedish, default is english
+#$2: <language> (s for swedish, default is english)
 lunch() {
 	#number of days from today
 	local ndays=0
 
 	#check if input null
-	if [ ! -z $1 ]; then
+	if ! isempty $1; then
 		ndays=$1
 
 		#check if input digit or negative
-		if ! [[ "$1" =~ ^[0-9]*$ ]] || [ $1 -lt 0 ]; then
+		if ! isdigit $1 || isnegative $1; then
 			echo -e "\nInvalid input\n"
 			return 0
 		fi
 	fi
 
-	local today='2019-04-15'
-	#$(date +'%Y-%m-%d')
-	local end_date=$(date -d "$today+$ndays days" +'%Y-%m-%d')
+	local today=$(date +'%Y-%m-%d')
+	local todate=$(date -d "$today+$ndays days" +'%Y-%m-%d')
 
 	#api url
 	expressen_url
-	local URL=''$url'?startDate='$today'&endDate='$end_date''
+	local URL=''$url'?startDate='$today'&endDate='$todate''
 
 	#get data
 	expressen_data "$URL" "$2"
 	local data=$expressen_data
 
-	if [ -z "$data" ]; then
+	if isempty "$data"; then
 		echo -e "\nNo data\n"
 		return 0
 	fi
@@ -66,36 +38,40 @@ lunch() {
 	toarray "$data"
 	arr=$arr
 
+	#init colors etc.
 	style
-	local lang='sv_SE.utf-8'
+
+	local SV='sv_SE.utf-8'
+	declare local tempdate
 	local length=${#arr[@]}
-	local temp=''
-	#data is stored: [date0, meat0, date0, veg0, date1, meat1, date1, veg1, ...],
-	# because of shitty json
+
+	#data is stored: [date0, meat0, date0, veg0, date1, meat1, date1, veg1, ...]
+	#+ because of shitty json
 	for ((i = 0; i < $length; i += 2)); do
 
-		#trim citation
 		local date=${arr[i]}
 		local food=${arr[$((i + 1))]}
 
-		if [ "$date" != "null" ] && [ "$food" != "null" ]; then
-			if [ "$date" != "$temp" ]; then
-				if [ "$2" == "s" ]; then
+		if isvalid "$date" "$food"; then
+			if ! equals "$date" "$tempdate"; then
+				if equals $2 s; then
 					#swedish
-					echo -e "\n${bold}${green}$(LC_TIME=$lang date --date "$date" +'%A')$default:"
+					dag=$(LC_TIME=$SV date --date "$date" +'%A')
+					echo -e "\n${bold}${green}${dag}${default}:"
 				else
 					#english
-					echo -e "\n${bold}${green}$(date --date "$date" +'%A')$default:"
+					day=$(date --date "$date" +'%A')
+					echo -e "\n${bold}${green}${day}${default}:"
 				fi
 
-				temp=$date
+				tempdate=$date
 			fi
 
 			is_it_meatballs "$food" "$2"
 			index=$index
 			end="$(echo $ingredient | awk '{print length}')"
 
-			if [[ ! -z "$index" ]]; then
+			if ! isempty $index; then
 				echo -e "${blink}${bold}${red}${food:$index:$end}${default}${food:$end}"
 			else
 				echo -e "$food"
@@ -106,15 +82,16 @@ lunch() {
 	echo -e ""
 }
 
-#expressen data, standard lang: eng
+#expressen data, default language: EN
 expressen_data() {
-	#get eng or swe menu
+	#get EN or SV menu
 	local lang=1
-	if [ "$2" == "s" ]; then
+	if equals $2 s; then
 		lang=0
 	fi
 
-	expressen_data=$(curl -s $1 | $jq -r '.[] | .startDate, .displayNames['$lang'].dishDisplayName')
+	expressen_data=$(curl -s $1 | jq -r '.[] | 
+	.startDate, .displayNames['$lang'].dishDisplayName')
 }
 
 #expressen api
@@ -126,7 +103,7 @@ expressen_url() {
 #return index if string contains 'MEATBALLS' or 'KöTTBULLAR'
 is_it_meatballs() {
 	ingredient='MEATBALLS'
-	if [ "$2" == "s" ]; then
+	if equals $2 s; then
 		ingredient='KöTTBULLAR'
 	fi
 
@@ -135,10 +112,10 @@ is_it_meatballs() {
 }
 
 #date is stored as '4/23/2019 12:00:00 AM' in shitty json,
-#which is a not valid format
+#+ which is a not valid format
 toarray() {
 	#IFS (internal field separator) variable is used to determine what characters
-	#bash defines as words boundaries when processing character strings.
+	#+ bash defines as words boundaries when processing character strings.
 	IFS=$'\n'
 
 	#store data in array
@@ -156,8 +133,24 @@ style() {
 	red='\e[31m'
 }
 
-#this script executes function 'lunch' with input:
-# $1: <#days from today>
-# $2: <language>, s for swedish
-# default is 0 days (today) and english
+equals() {
+	[ "$1" == "$2" ]
+}
+
+isempty() {
+	[ -z "$1" ]
+}
+
+isdigit() {
+	[[ "$1" =~ ^[0-9]*$ ]]
+}
+
+isnegative() {
+	[ $1 -lt 0 ]
+}
+
+isvalid() {
+	[ "$1" != "null" ] && [ "$2" != "null" ]
+}
+
 lunch $1 $2
