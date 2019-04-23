@@ -90,8 +90,9 @@ expressen_data() {
 		lang=0
 	fi
 
-	expressen_data=$(curl -s $1 | jq -r '.[] | 
-	.startDate, .displayNames['$lang'].dishDisplayName')
+	#sort because of shitty json
+	expressen_data=$(curl -s $1 | jq -r 'sort_by(.startDate) |
+	 (.[] | .startDate, .displayNames['$lang'].dishDisplayName)')
 }
 
 #expressen api
