@@ -3,7 +3,7 @@ Outputs Chalmers expressen lunch in terminal & highlights "Meatballs" or "Köttb
 
 <img src="expressen-GIF.gif" width="640">
 
-## How to run
+## Get jq
 Alt 1
 1. Install jq
 ```
