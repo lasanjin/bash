@@ -39,4 +39,4 @@ $ ./expressen.sh $1 $2
 - `$2` 
   - *optional*
   - language
-    - input `s` for swedish menu, default is english
+    - input `en` for English menu, default is Swedish
