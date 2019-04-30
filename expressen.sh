@@ -14,13 +14,11 @@ lunch() {
 
 	#check if input null
 	if ! isempty $1; then
-
 		#check if input digit or negative
 		if ! isdigit $1 || isnegative $1; then
 			echo -e "\nInvalid input\n"
 			return 0
 		fi
-
 		ndays=$1
 	fi
 
@@ -32,7 +30,6 @@ lunch() {
 
 	#get data
 	expressen_data $2
-
 	if isempty $rawdata; then
 		echo -e "\nNo data\n"
 		return 0
@@ -41,42 +38,24 @@ lunch() {
 	#store data in array
 	toarray
 
+	#map food to formatd dates in order to sort by date
+	declare -A local newdata
+	format
+
+	#sort data because of shitty json
+	IFS=';'
+	read -r -a sorted -d '' <<<"$(
+		for key in "${!newdata[@]}"; do
+			printf "%s\n" "$key ${newdata[$key]}"
+		done | sort -k1
+	)"
+	unset IFS
+
 	#init colors etc.
 	style
 
-	declare local index
-	declare local end
-	declare local tempdate
-	local length=${#data[@]}
-
-	#data is stored: [date0, meat0, date0, veg0, date1, meat1, date1, veg1, ...]
-	#+ because of shitty json
-	for ((i = 0; i < $length; i += 2)); do
-
-		local date=${data[i]}
-		local food=${data[$((i + 1))]}
-
-		if isvalid "$date" "$food"; then
-			if ! equals "$date" "$tempdate"; then
-
-				day=$(LC_TIME=$lang date --date "$date" +'%a')
-				echo -e "\n${bold}${green}${day}${default}"
-
-				tempdate=$date
-			fi
-
-			is_it_meatballs $2
-			if ! isempty $index; then
-
-				end="$(echo $ingredient | awk '{print length}')"
-				echo -e "${blink}${bold}${orange}${food:$index:$end}${default}${food:$end}"
-			else
-				echo -e "$food"
-			fi
-		fi
-	done
-
-	echo -e ""
+	#print data
+	print $2
 }
 
 #expressen data, default language: SV
@@ -87,7 +66,6 @@ expressen_data() {
 		arg=1
 	fi
 
-	#sort because of shitty json
 	rawdata=$(curl -s $url | jq -r 'sort_by(.startDate) |
 	 (.[] | .startDate, .displayNames['$arg'].dishDisplayName)')
 }
@@ -97,18 +75,6 @@ expressen_url() {
 	local hostname='http://carbonateapiprod.azurewebsites.net/'
 	local api='api/v1/mealprovidingunits/3d519481-1667-4cad-d2a3-08d558129279/dishoccurrences'
 	echo ''$hostname''$api'?startDate='$today'&endDate='$todate''
-}
-
-#return index if string contains 'MEATBALLS' or 'KöTTBULLAR'
-is_it_meatballs() {
-
-	ingredient='KöTTBULLAR'
-	if equals $1 en; then
-		ingredient='MEATBALLS'
-	fi
-
-	local capital="$(echo $food | tr a-z A-Z)"
-	index="$(echo $capital | grep -b -o $ingredient | awk 'BEGIN {FS=":"}{print $1}')"
 }
 
 #date is stored as '4/23/2019 12:00:00 AM' in shitty json,
@@ -123,6 +89,70 @@ toarray() {
 
 	#reset back to default value
 	unset IFS
+}
+
+format() {
+	local -r dateformat='+%Y-%m-%d'
+	local length=${#data[@]}
+	for ((i = 0; i < $length; i += 2)); do
+
+		local date=${data[i]}
+		local food=${data[$((i + 1))]}
+		local formated=$(date --date "$date" $dateformat)
+		local prev=${newdata[$formated]}
+
+		#store dates as keys mapping to food, meat and/or veg
+		if isempty $prev; then
+			newdata+=([$formated]=";$food;")
+		else
+			newdata[$formated]="$prev$food;"
+		fi
+	done
+}
+
+print() {
+	local length=${#sorted[@]}
+	for ((i = 0; i < $length; i += 1)); do
+
+		local wildcard=${sorted[i]}
+
+		if isdate $wildcard; then
+			local day=$(LC_TIME=$lang date --date "$wildcard" +'%a')
+			echo -e "\n${bold}${green}${day}${default}"
+		elif ! isempty $wildcard; then
+
+			is_it_meatballs $1
+
+			if ! isempty $index; then
+				printfood
+			else
+				echo $wildcard
+			fi
+
+		fi
+	done
+	echo ""
+}
+
+#return index if string contains 'köttbullar' or meatballs
+#does not work properly for matched words after special characters...
+is_it_meatballs() {
+	ingredient='köttbullar'
+	if equals $1 en; then
+		ingredient='meatballs'
+	fi
+	index="$(echo $wildcard | grep -bio $ingredient | grep -oE '[0-9]+')"
+}
+
+printfood() {
+	local foodend="$(echo $ingredient | awk '{print length}')"
+	local end=$(($index + $foodend))
+
+	local head="${wildcard:0:$index}"
+	local body="${blink}${bold}${orange}${wildcard:$index:$foodend}"
+	local tail="${default}${wildcard:$end}"
+
+	echo -e "${head}${body}${tail}"
 }
 
 style() {
@@ -149,8 +179,8 @@ isnegative() {
 	[ $1 -lt 0 ]
 }
 
-isvalid() {
-	[ "$1" != "null" ] && [ "$2" != "null" ]
+isdate() {
+	[[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && date -d "$1" >/dev/null
 }
 
 lunch $1 $2
