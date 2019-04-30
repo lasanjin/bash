@@ -1,5 +1,5 @@
 ## Description
-Gets, sorts & outputs Chalmers expressen lunch menu in terminal & highlights "Meatballs" or "Köttbullar" from Chalmers expressen lunch [api](http://carbonateapiprod.azurewebsites.net/api/v1/mealprovidingunits/3d519481-1667-4cad-d2a3-08d558129279/dishoccurrences?startDate=2019-04-22&endDate=2019-05-03). 
+Gets, sorts & outputs Chalmers expressen lunch menu in terminal & highlights **Meatballs** or **Köttbullar** from Chalmers expressen lunch [api](http://carbonateapiprod.azurewebsites.net/api/v1/mealprovidingunits/3d519481-1667-4cad-d2a3-08d558129279/dishoccurrences?startDate=2019-04-22&endDate=2019-05-03). 
 
 <img src="expressen-GIF.gif" width="640">
 
