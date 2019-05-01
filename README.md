@@ -1,7 +1,8 @@
 ## Description
 Gets, mapss, sorts & outputs Chalmers expressen lunch menu in terminal & highlights choosen ingredient (or *Meatballs* or *Köttbullar* as default) from Chalmers expressen lunch [api](https://chalmerskonferens.se/en/api/). 
 
-<img src="expressen-GIF.gif" width="640">
+<img src="resources/expressen-GIF.gif" width="640">
+<img src="resources/expressen-GIF2.gif" width="640">
 
 ## Get jq
 Alt 1
