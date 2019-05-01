@@ -7,14 +7,13 @@ lunch() {
 	#number of days from today
 	local ndays=0
 
+	#set language
 	local lang='sv_SE.utf-8'
 	if equals $2 en; then
 		lang='en_US.utf8'
 	fi
 
-	#check if input null
 	if ! isempty $1; then
-		#check if input digit or negative
 		if ! isdigit $1 || isnegative $1; then
 			echo -e "\nInvalid input\n"
 			return 0
@@ -55,12 +54,11 @@ lunch() {
 	style
 
 	#print data
-	print $2
+	print $2 $3
 }
 
-#expressen data, default language: SV
 expressen_data() {
-	#get EN or SV menu
+	#0 is Swedish menu
 	local arg=0
 	if equals $1 en; then
 		arg=1
@@ -77,8 +75,8 @@ expressen_url() {
 	echo ''$hostname''$api'?startDate='$today'&endDate='$todate''
 }
 
-#date is stored as '4/23/2019 12:00:00 AM' in shitty json,
-#+ which is a not valid format
+#date is stored as '4/23/2019 12:00:00 AM', which is a not valid format
+#+ makes it tricky to read data into array
 toarray() {
 	#IFS (internal field separator) variable is used to determine what characters
 	#+ bash defines as words boundaries when processing character strings.
@@ -95,17 +93,16 @@ format() {
 	local -r dateformat='+%Y-%m-%d'
 	local length=${#data[@]}
 	for ((i = 0; i < $length; i += 2)); do
-
 		local date=${data[i]}
-		local food=${data[$((i + 1))]}
+		local dish=${data[$((i + 1))]}
 		local formated=$(date --date "$date" $dateformat)
 		local prev=${newdata[$formated]}
 
-		#store dates as keys mapping to food, meat and/or veg
+		#store dates as keys mapping to dishes
 		if isempty $prev; then
-			newdata+=([$formated]=";$food;")
+			newdata+=([$formated]=";$dish;")
 		else
-			newdata[$formated]="$prev$food;"
+			newdata[$formated]="$prev$dish;"
 		fi
 	done
 }
@@ -113,43 +110,46 @@ format() {
 print() {
 	local length=${#sorted[@]}
 	for ((i = 0; i < $length; i += 1)); do
-
 		local wildcard=${sorted[i]}
 
 		if isdate $wildcard; then
 			local day=$(LC_TIME=$lang date --date "$wildcard" +'%a')
 			echo -e "\n${bold}${green}${day}${default}"
-		elif ! isempty $wildcard; then
 
-			is_it_meatballs $1
+		elif ! isempty $wildcard; then
+			is_it_ingredient $1 $2
 
 			if ! isempty $index; then
-				printfood
+				printdish
 			else
 				echo $wildcard
 			fi
-
 		fi
 	done
 	echo ""
 }
 
-#return index if string contains 'köttbullar' or meatballs
-#does not work properly for matched words after special characters...
-is_it_meatballs() {
-	ingredient='köttbullar'
+#return index of ingredients
+is_it_ingredient() {
+	ingredient="köttbullar"
 	if equals $1 en; then
-		ingredient='meatballs'
+		ingredient="meatballs"
 	fi
-	index="$(echo $wildcard | grep -bio $ingredient | grep -oE '[0-9]+')"
+
+	if ! isdigit $2 || ! isempty $2; then
+		ingredient=$2
+	fi
+
+	local param="\"\\\b$ingredient\\\b\"; \"i\""
+	index=$(echo \"$wildcard\" | jq "match($param).offset")
 }
 
-printfood() {
-	local foodend="$(echo $ingredient | awk '{print length}')"
-	local end=$(($index + $foodend))
+printdish() {
+	local dishend=$(echo $ingredient | jq -R "length")
+	local end=$(($index + $dishend))
 
 	local head="${wildcard:0:$index}"
-	local body="${blink}${bold}${orange}${wildcard:$index:$foodend}"
+	local body="${blink}${bold}${orange}${wildcard:$index:$dishend}"
 	local tail="${default}${wildcard:$end}"
 
 	echo -e "${head}${body}${tail}"
@@ -183,4 +183,4 @@ isdate() {
 	[[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && date -d "$1" >/dev/null
 }
 
-lunch $1 $2
+lunch $1 $2 $3
