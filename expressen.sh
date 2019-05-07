@@ -64,8 +64,7 @@ expressen_data() {
 		arg=1
 	fi
 
-	rawdata=$(curl -s $url | jq -r 'sort_by(.startDate) |
-	 (.[] | .startDate, .displayNames['$arg'].dishDisplayName)')
+	rawdata=$(curl -s $url | jq -r '.[] | .startDate, .displayNames['$arg'].dishDisplayName')
 }
 
 #expressen api
@@ -93,6 +92,7 @@ format() {
 	local -r dateformat='+%Y-%m-%d'
 	local length=${#data[@]}
 	for ((i = 0; i < $length; i += 2)); do
+
 		local date=${data[i]}
 		local dish=${data[$((i + 1))]}
 		local formated=$(date --date "$date" $dateformat)
