@@ -11,7 +11,7 @@ import sys
 
 def lunch():
     sv_date("sv_SE.utf-8")
-    num_of_restaurants = 3
+    num_of_restaurants = 4
     num_of_days = get_param()
     menu = {}
 
@@ -23,9 +23,8 @@ def lunch():
 
 
 def get_data(api, num_of_days):
-    keys = ['3d519481-1667-4cad-d2a3',
-            '21f31565-5c2b-4b47-d2a1', 'b672efaf-032a-4bb8-d2a5']
-
+    keys = ['3d519481-1667-4cad-d2a3', '21f31565-5c2b-4b47-d2a1',
+            'b672efaf-032a-4bb8-d2a5', '3ac68e11-bcee-425e-d2a8']
     dates = get_dates(num_of_days)
     req = requests.get(
         'http://carbonateapiprod.azurewebsites.net/'
@@ -108,7 +107,7 @@ def print_date(date):
 
 
 def print_restaurant(arr, index):
-    restaurants = ["Expressen", "Kårrestaurangen", "Linsen"]
+    restaurants = ["Expressen", "Kårrestaurangen", "Linsen", "S.M.A.K"]
     print style.BLUE + restaurants[index] + style.DEFAULT
 
 
