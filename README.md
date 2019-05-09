@@ -7,6 +7,7 @@ Outputs Chalmers
   
 lunch menu in terminal & highlights *Köttbullar* 
 
+<img src="resources/gif-py.gif" width="640">
 
 ## How to run
 Alt 1
@@ -32,5 +33,5 @@ $ ./expressen.py $1
      -  input `0-9`
 
 
-## [Linux](resources/README-sh.md)
-Open link for instruction on how to run bash script [*expressen.sh*](expressen.sh)
+## [Linux](resources/README.md)
+Open link for instructions on how to run bash script [*expressen.sh*](expressen.sh)
