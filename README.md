@@ -1,56 +1,36 @@
 ## Description
-Gets, mapss, sorts & outputs Chalmers expressen lunch menu in terminal & highlights choosen ingredient (or *Meatballs* or *Köttbullar* as default) from Chalmers expressen lunch [api](https://chalmerskonferens.se/en/api/). 
-
-<img src="resources/expressen-GIF.gif" width="640">
-<img src="resources/expressen-GIF2.gif" width="640">
-
-## Get jq
-Alt 1
-1. Install jq
-```
-$ sudo apt-get install jq
-```
-
-Alt 2
-1. Download jq
-```
-$ wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-```
-2. Make script executable
-```
-$ sudo chmod +x ./jq-linux64.sh 
-```
-1. Replace `jq` with `./jq-linux64` in [expressen.sh](expressen.sh)
+Outputs Chalmers
+- Expressen
+- Kårrestaurangen
+- Linsen
+- S.M.A.K
+  
+lunch menu in terminal & highlights *Köttbullar* 
 
 
 ## How to run
+Alt 1
+
+```
+$ python expressen.py $1
+```
+Alt 2
+
 1. Make script executable
 ```
-$ sudo chmod +x ./expressen.sh 
+$ sudo chmod +x ./expressen.py
 ```
 
 2. Run script
 ```
-$ ./expressen.sh $1 $2 $3
+$ ./expressen.py $1
 ```
+
 - `$1`
   -  *optional* 
-  -  #days from today
-     -  input `0-9`, default is today's menu
-- `$2` 
-  - *optional*
-  - requires `$1`
-  - language
-    - input `en` for English menu, default is Swedish
-- `$3` 
-  - *optional*
-  - requires `$2`
-    - input `en` or `a-z` for Swedish
-  - ingredient to highlight
-    - input `a-z`
-      - example
-        - potatis
-        - rice
-    - case insensitive
-    - exact match (whole word only)
-      - if input is "potatis", it will match "potatis" and not "potatismos"
+  -  number of days from today, default is today's menus
+     -  input `0-9`
+
+
+## [Linux](resources/README-sh.md)
+Open link for instruction on how to run bash script [*expressen.sh*](expressen.sh)

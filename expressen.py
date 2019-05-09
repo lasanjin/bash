@@ -135,7 +135,8 @@ def print_element(elem):
     body = elem[index:length]
     tail = elem[length:]
 
-    print "· ".decode("utf-8") + head + style.BLINK + body + style.DEFAULT + tail
+    print "· ".decode("utf-8") + head + style.BLINK + \
+        body + style.DEFAULT + tail
 
 
 def print_restaurant(arr, index):
@@ -149,7 +150,6 @@ def set_locale(code):
 
 
 class style():
-    DIM = '\033[2m'
     DEFAULT = '\033[0m'
     GREEN = '\033[92m'
     BLUE = '\033[94m'
