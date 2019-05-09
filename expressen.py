@@ -7,6 +7,7 @@ from datetime import datetime
 from datetime import timedelta
 import locale
 import sys
+import re
 
 
 def lunch():
@@ -58,11 +59,9 @@ def print_data(menu):
 
         for index, arr in enumerate(menu[key]):
             print_restaurant(arr, index)
-            if not arr:
-                print " - Ingen meny"
 
             for elem in arr:
-                print " - " + elem
+                print_element(elem)
     print_line()
 
 
@@ -83,6 +82,14 @@ def is_int(param):
         return True
     except ValueError:
         return False
+
+
+def find_index(reg):
+    try:
+        index = reg.start()
+        return index
+    except AttributeError:
+        return -1
 
 
 def get_dates(num_of_days):
@@ -106,9 +113,29 @@ def print_date(date):
         date, '%Y-%m-%d').strftime('%a') + style.DEFAULT
 
 
+def print_element(elem):
+    word = "köttbullar".decode("utf-8")
+    ans = re.search(r'\b' + re.escape(word) + r'\b', elem, re.IGNORECASE)
+
+    index = find_index(ans)
+    if index == -1:
+        print " - " + elem
+        return
+
+    length = (index+len(word))
+
+    head = elem[0:index]
+    body = elem[index:length]
+    tail = elem[length:]
+
+    print " - " + head + style.BOLD + style.BLINK + body + style.DEFAULT + tail
+
+
 def print_restaurant(arr, index):
     restaurants = ["Expressen", "Kårrestaurangen", "Linsen", "S.M.A.K"]
     print style.BLUE + restaurants[index] + style.DEFAULT
+    if not arr:
+        print " - Ingen meny"
 
 
 def print_line():
@@ -122,6 +149,7 @@ class style():
     GREEN = '\033[92m'
     BLUE = '\033[94m'
     BOLD = "\033[1m"
+    BLINK = '\33[5m'
 
 
 lunch()
