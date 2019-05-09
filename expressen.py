@@ -9,6 +9,11 @@ import json
 import sys
 import re
 
+restaurants = [["Expressen", '3d519481-1667-4cad-d2a3'],
+               ["Kårrestaurangen", '21f31565-5c2b-4b47-d2a1'],
+               ["Linsen", 'b672efaf-032a-4bb8-d2a5'],
+               ["S.M.A.K", '3ac68e11-bcee-425e-d2a8']]
+
 
 def lunch():
     set_locale("sv_SE.utf-8")
@@ -24,14 +29,14 @@ def lunch():
 
 
 def get_data(api, num_of_days):
-    keys = ['3d519481-1667-4cad-d2a3', '21f31565-5c2b-4b47-d2a1',
-            'b672efaf-032a-4bb8-d2a5', '3ac68e11-bcee-425e-d2a8']
-
     start_date, end_date = get_dates(num_of_days)
+    
     rawdata = json.loads(urllib2.urlopen(
         'http://carbonateapiprod.azurewebsites.net/'
-        'api/v1/mealprovidingunits/'+keys[api]+'-08d558129279/dishoccurrences?'
-        'startDate='+start_date+'&endDate='+end_date
+        'api/v1/mealprovidingunits/' +
+        restaurants[api][1]+'-08d558129279/dishoccurrences?'
+        'startDate='+start_date +
+        '&endDate='+end_date
     ).read())
 
     data = []
@@ -138,8 +143,7 @@ def print_element(elem):
 
 
 def print_restaurant(arr, index):
-    restaurants = ["Expressen", "Kårrestaurangen", "Linsen", "S.M.A.K"]
-    print style.BLUE + restaurants[index] + style.DEFAULT
+    print style.BLUE + restaurants[index][0] + style.DEFAULT
     if not arr:
         print " - Ingen meny"
 
