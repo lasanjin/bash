@@ -34,9 +34,9 @@ def get_data(api, num_of_days):
     rawdata = json.loads(urllib2.urlopen(
         'http://carbonateapiprod.azurewebsites.net/'
         'api/v1/mealprovidingunits/' +
-        restaurants[api][1]+'-08d558129279/dishoccurrences?'
-        'startDate='+start_date +
-        '&endDate='+end_date
+        restaurants[api][1] + '-08d558129279/dishoccurrences?'
+        'startDate=' + start_date +
+        '&endDate=' + end_date
     ).read())
 
     data = []
@@ -65,7 +65,7 @@ def map_data(menus, data, current_res, num_of_res):
 
 def print_data(menus):
     for key in sorted(menus):
-        print_line()
+        print
         print_date(key)
 
         for index, arr in enumerate(menus[key]):
@@ -73,7 +73,7 @@ def print_data(menus):
 
             for elem in arr:
                 print_element(elem)
-    print_line()
+    print
 
 
 def get_param():
@@ -135,18 +135,13 @@ def print_element(elem):
     body = elem[index:length]
     tail = elem[length:]
 
-    print " - " + head + style.BLINK + body + style.DEFAULT + tail
+    print "· ".decode("utf-8") + head + style.BLINK + body + style.DEFAULT + tail
 
 
 def print_restaurant(arr, index):
     print style.BLUE + restaurants[index][0] + style.DEFAULT
     if not arr:
         print "· Ingen meny".decode("utf-8")
-
-
-def print_line():
-    line = "-"*50
-    print style.DIM + line + style.DEFAULT
 
 
 def set_locale(code):
