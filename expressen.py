@@ -1,42 +1,48 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import pyjq
-import requests
 from datetime import datetime
 from datetime import timedelta
 import locale
+import urllib2
+import json
 import sys
 import re
 
 
 def lunch():
-    sv_date("sv_SE.utf-8")
+    set_locale("sv_SE.utf-8")
     num_of_restaurants = 4
     num_of_days = get_param()
-    menu = {}
+    menus = {}
 
     for i in range(num_of_restaurants):
         data = get_data(i, num_of_days)
-        map_data(menu, data, i, num_of_restaurants)
+        map_data(menus, data, i, num_of_restaurants)
 
-    print_data(menu)
+    print_data(menus)
 
 
 def get_data(api, num_of_days):
     keys = ['3d519481-1667-4cad-d2a3', '21f31565-5c2b-4b47-d2a1',
             'b672efaf-032a-4bb8-d2a5', '3ac68e11-bcee-425e-d2a8']
-    dates = get_dates(num_of_days)
-    req = requests.get(
+
+    start_date, end_date = get_dates(num_of_days)
+    rawdata = json.loads(urllib2.urlopen(
         'http://carbonateapiprod.azurewebsites.net/'
         'api/v1/mealprovidingunits/'+keys[api]+'-08d558129279/dishoccurrences?'
-        'startDate='+dates[0]+'&endDate='+dates[1])
+        'startDate='+start_date+'&endDate='+end_date
+    ).read())
 
-    return pyjq.all(
-        '.[] | .startDate, .displayNames[0].dishDisplayName', req.json())
+    data = []
+    for i in rawdata:
+        data.append(i['startDate'])
+        data.append(i['displayNames'][0]['dishDisplayName'])
+
+    return data
 
 
-def map_data(menu, data, res, num_of_res):
+def map_data(menus, data, res, num_of_res):
     length = len(data)
     for i in range(0, length, 2):
 
@@ -44,20 +50,20 @@ def map_data(menu, data, res, num_of_res):
         food = data[i+1]
         formated = format_date(date)
 
-        if formated in menu:
-            menu[formated][res].append(food)
+        if formated in menus:
+            menus[formated][res].append(food)
         else:
             disharr = [[] for i in range(num_of_res)]
             disharr[res].append(food)
-            menu[formated] = disharr
+            menus[formated] = disharr
 
 
-def print_data(menu):
-    for key in sorted(menu):
+def print_data(menus):
+    for key in sorted(menus):
         print_line()
         print_date(key)
 
-        for index, arr in enumerate(menu[key]):
+        for index, arr in enumerate(menus[key]):
             print_restaurant(arr, index)
 
             for elem in arr:
@@ -96,11 +102,11 @@ def get_dates(num_of_days):
     today = datetime.today()
     end_date = (today + timedelta(days=num_of_days)).strftime('%Y-%m-%d')
     start_date = today.strftime('%Y-%m-%d')
-    return [start_date, end_date]
+    return start_date, end_date
 
 
-def sv_date(code):
-    locale.setlocale(locale.LC_TIME, code)
+def set_locale(code):
+    locale.setlocale(locale.LC_ALL, code)
 
 
 def format_date(date):
