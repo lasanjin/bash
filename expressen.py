@@ -21,16 +21,16 @@ def lunch():
     num_of_days = get_param()
     menus = {}
 
-    for i in range(num_of_restaurants):
-        data = get_data(i, num_of_days)
-        map_data(menus, data, i, num_of_restaurants)
+    for current_restaurant in range(num_of_restaurants):
+        data = get_data(current_restaurant, num_of_days)
+        map_data(menus, data, current_restaurant, num_of_restaurants)
 
     print_data(menus)
 
 
 def get_data(api, num_of_days):
     start_date, end_date = get_dates(num_of_days)
-    
+
     rawdata = json.loads(urllib2.urlopen(
         'http://carbonateapiprod.azurewebsites.net/'
         'api/v1/mealprovidingunits/' +
@@ -47,7 +47,7 @@ def get_data(api, num_of_days):
     return data
 
 
-def map_data(menus, data, res, num_of_res):
+def map_data(menus, data, current_res, num_of_res):
     length = len(data)
     for i in range(0, length, 2):
 
@@ -56,10 +56,10 @@ def map_data(menus, data, res, num_of_res):
         formated = format_date(date)
 
         if formated in menus:
-            menus[formated][res].append(food)
+            menus[formated][current_res].append(food)
         else:
             disharr = [[] for i in range(num_of_res)]
-            disharr[res].append(food)
+            disharr[current_res].append(food)
             menus[formated] = disharr
 
 
@@ -110,10 +110,6 @@ def get_dates(num_of_days):
     return start_date, end_date
 
 
-def set_locale(code):
-    locale.setlocale(locale.LC_ALL, code)
-
-
 def format_date(date):
     return datetime.strptime(
         date[:-3], '%m/%d/%Y %H:%M:%S').strftime('%Y-%m-%d')
@@ -139,7 +135,7 @@ def print_element(elem):
     body = elem[index:length]
     tail = elem[length:]
 
-    print " - " + head + style.BOLD + style.BLINK + body + style.DEFAULT + tail
+    print " - " + head + style.BLINK + body + style.DEFAULT + tail
 
 
 def print_restaurant(arr, index):
@@ -151,6 +147,10 @@ def print_restaurant(arr, index):
 def print_line():
     line = "-"*50
     print style.DIM + line + style.DEFAULT
+
+
+def set_locale(code):
+    locale.setlocale(locale.LC_ALL, code)
 
 
 class style():
