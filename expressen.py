@@ -126,7 +126,7 @@ def print_element(elem):
 
     index = find_index(ans)
     if index == -1:
-        print " - " + elem
+        print "· ".decode("utf-8") + elem
         return
 
     length = (index+len(word))
@@ -141,7 +141,7 @@ def print_element(elem):
 def print_restaurant(arr, index):
     print style.BLUE + restaurants[index][0] + style.DEFAULT
     if not arr:
-        print " - Ingen meny"
+        print "· Ingen meny".decode("utf-8")
 
 
 def print_line():
