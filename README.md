@@ -4,6 +4,7 @@ Outputs Chalmers
 - Kårrestaurangen
 - Linsen
 - S.M.A.K
+- J.A. Pripps
   
 lunch menu in terminal & highlights *Köttbullar* 
 

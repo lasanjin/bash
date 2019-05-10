@@ -3,6 +3,7 @@
 
 from datetime import datetime
 from datetime import timedelta
+import xml.etree.ElementTree as ET
 import locale
 import urllib2
 import json
@@ -12,18 +13,23 @@ import re
 restaurants = [["Expressen", '3d519481-1667-4cad-d2a3'],
                ["Kårrestaurangen", '21f31565-5c2b-4b47-d2a1'],
                ["Linsen", 'b672efaf-032a-4bb8-d2a5'],
-               ["S.M.A.K", '3ac68e11-bcee-425e-d2a8']]
+               ["S.M.A.K", '3ac68e11-bcee-425e-d2a8'],
+               ["J.A. Pripps", 'http://intern.chalmerskonferens.se/view/'
+                'restaurant/j-a-pripps-pub-cafe/RSS%20Feed.rss']]
 
 
 def lunch():
     set_locale("sv_SE.utf-8")
-    num_of_restaurants = 4
+    num_of_restaurants = 5
     num_of_days = get_param()
     menus = {}
 
-    for current_restaurant in range(num_of_restaurants):
-        data = get_data(current_restaurant, num_of_days)
-        map_data(menus, data, current_restaurant, num_of_restaurants)
+    for restaurant in range(num_of_restaurants - 1):
+        menu = get_data(restaurant, num_of_days)
+        map_data(menus, menu, restaurant, num_of_restaurants)
+
+    pripps_menu = get_pripps_data(4, num_of_days)
+    map_data(menus, pripps_menu, 4, num_of_restaurants)
 
     print_data(menus)
 
@@ -41,26 +47,55 @@ def get_data(api, num_of_days):
 
     data = []
     for i in rawdata:
-        data.append(i['startDate'])
+        data.append(format_date(i['startDate']))
         data.append(i['displayNames'][0]['dishDisplayName'])
 
     return data
 
 
-def map_data(menus, data, current_res, num_of_res):
+def get_pripps_data(api, num_of_days):
+    data = []
+    root = ET.fromstring(urllib2.urlopen(restaurants[api][1]).read())
+    item = root.findall('channel/item')
+
+    for title in item:
+        date = title.find("title").text[-10:]
+        for description in title:
+            for table in description:
+                for tr in table:
+                    for td in tr:
+                        if if_date_in_range(date, num_of_days):
+                            dish = td.text.strip()
+                            wildcard = td.find("b")
+
+                            if wildcard != None:  # bad xml
+                                type_of_dish = wildcard.text
+
+                            if dish != "":  # bad xml
+                                data.append(date)
+                                data.append(dish + style.DIM +
+                                            " (" + type_of_dish + ")" + style.DEFAULT)
+    return data
+
+
+def if_date_in_range(date, num_of_days):
+    start_date, end_date = get_dates(num_of_days)
+    return start_date <= date <= end_date
+
+
+def map_data(menus, data, restaurant, num_of_restaurants):
     length = len(data)
     for i in range(0, length, 2):
 
         date = data[i]
-        food = data[i+1]
-        formated = format_date(date)
+        dish = data[i+1]
 
-        if formated in menus:
-            menus[formated][current_res].append(food)
+        if date in menus:
+            menus[date][restaurant].append(dish)
         else:
-            disharr = [[] for i in range(num_of_res)]
-            disharr[current_res].append(food)
-            menus[formated] = disharr
+            disharr = [[] for i in range(num_of_restaurants)]
+            disharr[restaurant].append(dish)
+            menus[date] = disharr
 
 
 def print_data(menus):
@@ -68,11 +103,11 @@ def print_data(menus):
         print
         print_date(key)
 
-        for index, arr in enumerate(menus[key]):
-            print_restaurant(arr, index)
+        for restaurant, menu in enumerate(menus[key]):
+            print_restaurant(menu, restaurant)
 
-            for elem in arr:
-                print_element(elem)
+            for dish in menu:
+                print_element(dish)
     print
 
 
@@ -120,28 +155,31 @@ def print_date(date):
         date, '%Y-%m-%d').strftime('%a') + style.DEFAULT
 
 
-def print_element(elem):
-    word = "köttbullar".decode("utf-8")
-    ans = re.search(r'\b' + re.escape(word) + r'\b', elem, re.IGNORECASE)
+def print_element(dish):
+    ingredient = "köttbullar".decode("utf-8")
+    ans = re.search(r'\b' + re.escape(ingredient) + r'\b', dish, re.IGNORECASE)
 
     index = find_index(ans)
-    if index == -1:
-        print "· ".decode("utf-8") + elem
-        return
+    if index != -1:
+        print_match(dish, ingredient, index)
+    else:
+        print "· ".decode("utf-8") + dish
 
-    length = (index+len(word))
 
-    head = elem[0:index]
-    body = elem[index:length]
-    tail = elem[length:]
+def print_match(dish, ingredient, index):
+    length = (index+len(ingredient))
+
+    head = dish[0:index]
+    body = dish[index:length]
+    tail = dish[length:]
 
     print "· ".decode("utf-8") + head + style.BLINK + \
         body + style.DEFAULT + tail
 
 
-def print_restaurant(arr, index):
-    print style.BLUE + restaurants[index][0] + style.DEFAULT
-    if not arr:
+def print_restaurant(menu, restaurant):
+    print style.BLUE + restaurants[restaurant][0] + style.DEFAULT
+    if not menu:
         print "· Ingen meny".decode("utf-8")
 
 
@@ -155,6 +193,8 @@ class style():
     BLUE = '\033[94m'
     BOLD = "\033[1m"
     BLINK = '\33[5m'
+    HEADER = '\033[95m'
+    DIM = '\033[2m'
 
 
 lunch()
