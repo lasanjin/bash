@@ -1,12 +1,12 @@
 ## Description
-Outputs Chalmers
+Outputs Chalmers *Johanneberg*
 - Expressen
 - Kårrestaurangen
 - Linsen
 - S.M.A.K
 - J.A. Pripps
   
-lunch menu in terminal & highlights *Köttbullar* 
+lunch menu in terminal & highlights *Köttbullar*
 
 <img src="resources/gif-py.gif" width="640">
 

@@ -55,16 +55,18 @@ def get_data(api, num_of_days):
 
 def get_pripps_data(api, num_of_days):
     data = []
-    root = ET.fromstring(urllib2.urlopen(restaurants[api][1]).read())
-    item = root.findall('channel/item')
+    item = parse_xml(api)
+    start_date, end_date = get_dates(num_of_days)
 
     for title in item:
         date = title.find("title").text[-10:]
+
         for description in title:
             for table in description:
                 for tr in table:
                     for td in tr:
-                        if if_date_in_range(date, num_of_days):
+
+                        if if_date_in_range(date, start_date, end_date):
                             dish = td.text.strip()
                             wildcard = td.find("b")
 
@@ -78,8 +80,12 @@ def get_pripps_data(api, num_of_days):
     return data
 
 
-def if_date_in_range(date, num_of_days):
-    start_date, end_date = get_dates(num_of_days)
+def parse_xml(api):
+    root = ET.fromstring(urllib2.urlopen(restaurants[api][1]).read())
+    return root.findall('channel/item')
+
+
+def if_date_in_range(date, start_date, end_date):
     return start_date <= date <= end_date
 
 
@@ -193,7 +199,6 @@ class style():
     BLUE = '\033[94m'
     BOLD = "\033[1m"
     BLINK = '\33[5m'
-    HEADER = '\033[95m'
     DIM = '\033[2m'
 
 
