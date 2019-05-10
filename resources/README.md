@@ -20,7 +20,7 @@ $ wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
 ```
 $ sudo chmod +x ./jq-linux64.sh 
 ```
-1. Replace `jq` with `./jq-linux64` in [*expressen.sh*](expressen.sh)
+1. Replace `jq` with `./jq-linux64` in [*expressen.sh*](../expressen.sh)
 
 
 ## How to run

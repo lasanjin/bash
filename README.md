@@ -11,10 +11,14 @@ lunch menu in terminal & highlights *Köttbullar*
 <img src="resources/gif-py.gif" width="640">
 
 ## Install
-```curl "https://raw.githubusercontent.com/lasanjin/expressen-lunch-cli/master/expressen.py" | bash```
+```
+curl "https://raw.githubusercontent.com/lasanjin/expressen-lunch-cli/master/expressen.py" | bash
+```
 
 ## How to run
-```express```
+```
+express
+```
 
 - `$1`
   -  *optional* 
@@ -23,4 +27,4 @@ lunch menu in terminal & highlights *Köttbullar*
 
 
 ## [Linux](resources/README.md)
-Open link for instructions on how to run bash script [*expressen.sh*](expressen.sh)
+Open link for instructions on how to run bash script [*expressen.sh*](bash/expressen.sh)
