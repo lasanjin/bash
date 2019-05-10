@@ -10,23 +10,11 @@ lunch menu in terminal & highlights *Köttbullar*
 
 <img src="resources/gif-py.gif" width="640">
 
+## Install
+```curl "https://raw.githubusercontent.com/lasanjin/expressen-lunch-cli/master/expressen.py" | bash```
+
 ## How to run
-Alt 1
-
-```
-$ python expressen.py $1
-```
-Alt 2
-
-1. Make script executable
-```
-$ sudo chmod +x ./expressen.py
-```
-
-2. Run script
-```
-$ ./expressen.py $1
-```
+```express```
 
 - `$1`
   -  *optional* 
