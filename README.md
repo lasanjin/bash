@@ -12,18 +12,18 @@ lunch menu in terminal & highlights *Köttbullar*
 
 ## Install
 ```
-$ curl "https://raw.githubusercontent.com/lasanjin/expressen-lunch-cli/master/install.sh" | bash
+$ curl "https://raw.githubusercontent.com/lasanjin/chalmers-lunch-cli/master/install.sh" | bash
 ```
 
 ## How to run
 ```
-$ express
+$ clunch
 ```
 
 - `$1`
   -  *optional* 
   -  number of days from today, default is today's menus
-     -  input `0-9`
+  -  input `0-9`
 
 
 ## [Linux](resources/README.md)
