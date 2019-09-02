@@ -1,5 +1,5 @@
 # Chalmers lunch CLI
-Something I use daily. A project I did alongside my studies to learn some basic Bash and Python.
+Something I use daily. A project I did alongside my studies to learn some basic Bash and Python. 
 
 ## Description
 Outputs Chalmers *Johanneberg*
