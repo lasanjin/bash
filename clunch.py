@@ -28,8 +28,8 @@ def main():
 
 
 def get_menus():
-    queue = build_queue()
     menus = {}
+    queue = build_queue()
 
     for i in range(queue.qsize()):
         thread = Thread(target=get_menus_thread,
@@ -44,8 +44,8 @@ def get_menus():
 
 def build_queue():
     queue = Queue()
-    num_of_restaurants = len(restaurants)
     num_of_days = get_param()
+    num_of_restaurants = len(restaurants)
 
     for restaurant in range(num_of_restaurants):
         queue.put((num_of_days, restaurant))
@@ -56,13 +56,13 @@ def build_queue():
 def get_menus_thread(queue, menus):
     while not queue.empty():
         q = queue.get()
-        res = get_menu(q[1], q[0])
+        data = get_menu(q[1], q[0])
         r = restaurants[q[1]][0]
 
         if r == "J.A. Pripps":
-            menu = parse_pripps_menu(res, q[0])
+            menu = parse_pripps_menu(data, q[0])
         else:
-            menu = parse_menu(res)
+            menu = parse_menu(data)
 
         map_data(menus, menu, q[1])
         queue.task_done()
@@ -75,7 +75,7 @@ def get_menu(restaurant, num_of_days):
         return urllib2.urlopen(url).read()
 
     except urllib2.HTTPError as e:
-        print "HTTPError: {}, {}".format(e.code)
+        print "HTTPError: {}".format(e.code)
 
     except urllib2.URLError, e:
         print "URLError: {}".format(e.reason)
@@ -101,19 +101,19 @@ def get_url(restaurant, num_of_days):
             end_date)
 
 
-def parse_menu(res):
-    rawdata = json.loads(res)
-    data = []
+def parse_menu(data):
+    rawdata = json.loads(data)
+    menu = []
     for i in rawdata:
-        data.append(format_date(i['startDate']))
-        data.append(i['displayNames'][0]['dishDisplayName'])
+        menu.append(format_date(i['startDate']))
+        menu.append(i['displayNames'][0]['dishDisplayName'])
 
-    return data
+    return menu
 
 
-def parse_pripps_menu(menu, num_of_days):
-    item = parse_xml(menu)
-    data = []
+def parse_pripps_menu(data, num_of_days):
+    item = parse_xml(data)
+    menu = []
     start_date, end_date = get_dates(num_of_days)
 
     for title in item:
@@ -131,22 +131,22 @@ def parse_pripps_menu(menu, num_of_days):
                             if date_in_range(date,
                                              start_date,
                                              end_date):
-                                append_data(data,
+                                append_data(menu,
                                             date,
                                             dish,
                                             dish_type)
-    return data
+    return menu
 
 
-def parse_xml(res):
-    root = ET.fromstring(res)
+def parse_xml(data):
+    root = ET.fromstring(data)
 
     return root.findall('channel/item')
 
 
-def append_data(data, date, dish, dish_type):
-    data.append(date)
-    data.append(dish + style.DIM +
+def append_data(manu, date, dish, dish_type):
+    manu.append(date)
+    manu.append(dish + style.DIM +
                 " (" + dish_type + ")" + style.DEFAULT)
 
 
@@ -157,6 +157,7 @@ def date_in_range(date, start_date, end_date):
 def map_data(menus, data, restaurant):
     num_of_restaurants = len(restaurants)
     length = len(data)
+
     for i in range(0, length, 2):
 
         date = data[i]
@@ -168,6 +169,36 @@ def map_data(menus, data, restaurant):
             disharr = [[] for i in range(num_of_restaurants)]
             disharr[restaurant].append(dish)
             menus[date] = disharr
+
+
+def get_param():
+    try:
+        p = sys.argv[1:][0]
+        i = int(p)
+
+        return i if i >= 0 else 0
+
+    except IndexError:
+        return 0
+
+    except ValueError:
+        return 0
+
+
+def get_dates(num_of_days):
+    today = datetime.today()
+    end_date = (today + timedelta(days=num_of_days)).strftime('%Y-%m-%d')
+    start_date = today.strftime('%Y-%m-%d')
+    return start_date, end_date
+
+
+def format_date(date):
+    return datetime.strptime(
+        date[:-3], '%m/%d/%Y %H:%M:%S').strftime('%Y-%m-%d')
+
+
+def set_locale(code):
+    locale.setlocale(locale.LC_ALL, code)
 
 
 def print_data(menus):
@@ -187,48 +218,15 @@ def print_data(menus):
     print
 
 
-def get_param():
-    try:
-        param = sys.argv[1:][0]
-        if is_int(param):
-            if 0 <= param:
-                return int(param)
-        return 0
-    except IndexError:
-        return 0
-
-
-def is_int(param):
-    try:
-        int(param)
-        return True
-    except ValueError:
-        return False
-
-
-def find_index(reg):
-    try:
-        index = reg.start()
-        return index
-    except AttributeError:
-        return -1
-
-
-def get_dates(num_of_days):
-    today = datetime.today()
-    end_date = (today + timedelta(days=num_of_days)).strftime('%Y-%m-%d')
-    start_date = today.strftime('%Y-%m-%d')
-    return start_date, end_date
-
-
-def format_date(date):
-    return datetime.strptime(
-        date[:-3], '%m/%d/%Y %H:%M:%S').strftime('%Y-%m-%d')
-
-
 def print_date(date):
     print style.BOLD + style.GREEN + datetime.strptime(
         date, '%Y-%m-%d').strftime('%a') + style.DEFAULT
+
+
+def print_restaurant(menu, restaurant):
+    print style.BLUE + restaurants[restaurant][0] + style.DEFAULT
+    if not menu:
+        print style.DOT + style.DIM + "Ingen meny" + style.DEFAULT
 
 
 def print_element(dish):
@@ -243,6 +241,13 @@ def print_element(dish):
         print style.DOT + dish
 
 
+def find_index(reg):
+    try:
+        return reg.start()
+    except AttributeError:
+        return -1
+
+
 def print_match(dish, ingredient, index):
     length = (index+len(ingredient))
 
@@ -252,16 +257,6 @@ def print_match(dish, ingredient, index):
 
     print style.DOT + head + style.BLINK + \
         body + style.DEFAULT + tail
-
-
-def print_restaurant(menu, restaurant):
-    print style.BLUE + restaurants[restaurant][0] + style.DEFAULT
-    if not menu:
-        print style.DOT + style.DIM + "Ingen meny" + style.DEFAULT
-
-
-def set_locale(code):
-    locale.setlocale(locale.LC_ALL, code)
 
 
 class api:
