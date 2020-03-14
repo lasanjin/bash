@@ -21,8 +21,7 @@ elif six.PY3:  # python3
     from queue import Queue
     import urllib.request
     import urllib.error as urllib2  # urllib2.HTTPError
-    import urllib.parse
-    import http.client
+    import http.client as httplib  # httplib.HTTPException
 
 restaurants = [["Expressen", '3d519481-1667-4cad-d2a3'],
                ["Kårrestaurangen", '21f31565-5c2b-4b47-d2a1'],
@@ -296,8 +295,8 @@ class style:
 
 
 class const:
-    NO_DATA = "Ingen data"
-    NO_MENU = "Ingen meny"
+    NO_DATA = "INGEN DATA"
+    NO_MENU = "INGEN MENY"
     PRIPPS = "J.A. Pripps"
 
     @staticmethod
