@@ -1,17 +1,28 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function  # print python2
 from datetime import datetime
 from datetime import timedelta
 from threading import Thread
-from Queue import Queue
+
 import xml.etree.ElementTree as ET
 import locale
-import urllib2
-import httplib
 import json
 import sys
 import re
+import six
+
+if six.PY2:  # python2
+    from Queue import Queue
+    import urllib2
+    import httplib
+elif six.PY3:  # python3
+    from queue import Queue
+    import urllib.request
+    import urllib.error as urllib2  # urllib2.HTTPError
+    import urllib.parse
+    import http.client
 
 restaurants = [["Expressen", '3d519481-1667-4cad-d2a3'],
                ["Kårrestaurangen", '21f31565-5c2b-4b47-d2a1'],
@@ -59,7 +70,7 @@ def get_menus_thread(queue, menus):
         data = get_menu(q[1], q[0])
         r = restaurants[q[1]][0]
 
-        if r == "J.A. Pripps":
+        if r == const.PRIPPS:
             menu = parse_pripps_menu(data, q[0])
         else:
             menu = parse_menu(data)
@@ -72,25 +83,28 @@ def get_menu(restaurant, num_of_days):
     url = get_url(restaurant, num_of_days)
 
     try:
-        return urllib2.urlopen(url).read()
+        if six.PY2:
+            return urllib2.urlopen(url).read()
+        elif six.PY3:
+            return urllib.request.urlopen(url).read().decode('utf-8')
 
     except urllib2.HTTPError as e:
-        print "HTTPError: {}".format(e.code)
+        print("HTTPError: {}".format(e.code))
 
-    except urllib2.URLError, e:
-        print "URLError: {}".format(e.reason)
+    except urllib2.URLError as e:
+        print("URLError: {}".format(e.reason))
 
-    except httplib.HTTPException, e:
-        print "HTTPException: {}".format(e)
+    except httplib.HTTPException as e:
+        print("HTTPException: {}".format(e))
 
     except Exception as e:
-        print "Exception: {}".format(e)
+        print("Exception: {}".format(e))
 
 
 def get_url(restaurant, num_of_days):
     r = restaurants[restaurant][0]
 
-    if r == "J.A. Pripps":
+    if r == const.PRIPPS:
         return restaurants[restaurant][1]
     else:
         start_date, end_date = get_dates(num_of_days)
@@ -203,11 +217,11 @@ def set_locale(code):
 
 def print_data(menus):
     if not menus:
-        print "Ingen data"
+        print(const.NO_DATA)
         quit()
 
     for key in sorted(menus):
-        print
+        print()
         print_date(key)
 
         for restaurant, menu in enumerate(menus[key]):
@@ -215,22 +229,22 @@ def print_data(menus):
 
             for dish in menu:
                 print_element(dish)
-    print
+    print()
 
 
 def print_date(date):
-    print style.BOLD + style.GREEN + datetime.strptime(
-        date, '%Y-%m-%d').strftime('%a') + style.DEFAULT
+    print(style.BOLD + style.GREEN + datetime.strptime(
+        date, '%Y-%m-%d').strftime('%a') + style.DEFAULT)
 
 
 def print_restaurant(menu, restaurant):
-    print style.BLUE + restaurants[restaurant][0] + style.DEFAULT
+    print(style.BLUE + restaurants[restaurant][0] + style.DEFAULT)
     if not menu:
-        print style.DOT + style.DIM + "Ingen meny" + style.DEFAULT
+        print(const.DOT() + style.DIM + const.NO_MENU + style.DEFAULT)
 
 
 def print_element(dish):
-    ingredient = "köttbullar".decode("utf-8")
+    ingredient = const.BALLS()
     ans = re.search(r'\b' + re.escape(ingredient)
                     + r'\b', dish, re.IGNORECASE)
 
@@ -238,7 +252,7 @@ def print_element(dish):
     if index != -1:
         print_match(dish, ingredient, index)
     else:
-        print style.DOT + dish
+        print(const.DOT() + dish)
 
 
 def find_index(reg):
@@ -255,8 +269,8 @@ def print_match(dish, ingredient, index):
     body = dish[index:length]
     tail = dish[length:]
 
-    print style.DOT + head + style.BLINK + \
-        body + style.DEFAULT + tail
+    print(const.DOT() + head + style.BLINK +
+          body + style.DEFAULT + tail)
 
 
 class api:
@@ -279,7 +293,29 @@ class style:
     BOLD = "\033[1m"
     BLINK = '\33[5m'
     DIM = '\033[2m'
-    DOT = "· ".decode("utf-8")
+
+
+class const:
+    NO_DATA = "Ingen data"
+    NO_MENU = "Ingen meny"
+    PRIPPS = "J.A. Pripps"
+
+    @staticmethod
+    def DOT():
+        # return '· '.decode("utf-8")
+        return const.decode('· ')
+
+    @staticmethod
+    def BALLS():
+        # return 'köttbullar'.decode("utf-8")
+        return const.decode('kötbullar')
+
+    @staticmethod
+    def decode(string):
+        if six.PY2:
+            return string.decode("utf-8")
+        elif six.PY3:
+            return string
 
 
 if __name__ == "__main__":
