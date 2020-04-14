@@ -1,5 +1,5 @@
 # Chalmers lunch CLI
-A project I did alongside my studies to learn some basic Python and Bash.
+Outputs Chalmers lunch menues.
 
 ## Description
 Outputs Chalmers *Johanneberg*

@@ -5,7 +5,6 @@ from __future__ import print_function  # print python2
 from datetime import datetime
 from datetime import timedelta
 from threading import Thread
-
 import xml.etree.ElementTree as ET
 import locale
 import json
@@ -17,11 +16,13 @@ if six.PY2:  # python2
     from Queue import Queue
     import urllib2
     import httplib
+
 elif six.PY3:  # python3
     from queue import Queue
     import urllib.request
     import urllib.error as urllib2  # urllib2.HTTPError
     import http.client as httplib  # httplib.HTTPException
+
 
 restaurants = [["Expressen", '3d519481-1667-4cad-d2a3'],
                ["Kårrestaurangen", '21f31565-5c2b-4b47-d2a1'],
@@ -32,18 +33,19 @@ restaurants = [["Expressen", '3d519481-1667-4cad-d2a3'],
 
 
 def main():
-    set_locale("sv_SE.utf-8")
+    set_locale(C.LOCALE)
     menus = get_menus()
     print_data(menus)
 
 
 def get_menus():
-    menus = {}
+    menus = dict()
+    num_of_days = get_param()
     queue = build_queue()
 
     for i in range(queue.qsize()):
         thread = Thread(target=get_menus_thread,
-                        args=(queue, menus))
+                        args=(queue, menus, num_of_days))
         thread.daemon = True
         thread.start()
 
@@ -54,27 +56,27 @@ def get_menus():
 
 def build_queue():
     queue = Queue()
-    num_of_days = get_param()
     num_of_restaurants = len(restaurants)
 
     for restaurant in range(num_of_restaurants):
-        queue.put((num_of_days, restaurant))
+        queue.put(restaurant)
 
     return queue
 
 
-def get_menus_thread(queue, menus):
+def get_menus_thread(queue, menus, num_of_days):
     while not queue.empty():
-        q = queue.get()
-        data = get_menu(q[1], q[0])
-        r = restaurants[q[1]][0]
+        restaurant = queue.get()
+        data = get_menu(restaurant, num_of_days)
+        r = restaurants[restaurant][0]
 
-        if r == const.PRIPPS:
-            menu = parse_pripps_menu(data, q[0])
+        if r == C.PRIPPS:
+            menu = parse_pripps_menu(data, num_of_days)
         else:
             menu = parse_menu(data)
 
-        map_data(menus, menu, q[1])
+        map_data(menus, menu, restaurant)
+
         queue.task_done()
 
 
@@ -103,12 +105,12 @@ def get_menu(restaurant, num_of_days):
 def get_url(restaurant, num_of_days):
     r = restaurants[restaurant][0]
 
-    if r == const.PRIPPS:
+    if r == C.PRIPPS:
         return restaurants[restaurant][1]
     else:
         start_date, end_date = get_dates(num_of_days)
 
-        return api.API_URL(
+        return api.url(
             restaurants[restaurant][1],
             start_date,
             end_date)
@@ -159,8 +161,7 @@ def parse_xml(data):
 
 def append_data(manu, date, dish, dish_type):
     manu.append(date)
-    manu.append(dish + style.DIM +
-                " (" + dish_type + ")" + style.DEFAULT)
+    manu.append(dish + color.dim(" (" + dish_type + ")"))
 
 
 def date_in_range(date, start_date, end_date):
@@ -200,14 +201,15 @@ def get_param():
 
 def get_dates(num_of_days):
     today = datetime.today()
-    end_date = (today + timedelta(days=num_of_days)).strftime('%Y-%m-%d')
-    start_date = today.strftime('%Y-%m-%d')
+    end_date = (today + timedelta(days=num_of_days)).strftime(C.format('Ymd'))
+    start_date = today.strftime(C.format('Ymd'))
+
     return start_date, end_date
 
 
 def format_date(date):
     return datetime.strptime(
-        date[:-3], '%m/%d/%Y %H:%M:%S').strftime('%Y-%m-%d')
+        date[:-3], C.format('mdYHMS')).strftime(C.format('Ymd'))
 
 
 def set_locale(code):
@@ -216,7 +218,7 @@ def set_locale(code):
 
 def print_data(menus):
     if not menus:
-        print(const.NO_DATA)
+        print(C.NO_DATA)
         quit()
 
     for key in sorted(menus):
@@ -232,18 +234,19 @@ def print_data(menus):
 
 
 def print_date(date):
-    print(style.BOLD + style.GREEN + datetime.strptime(
-        date, '%Y-%m-%d').strftime('%a') + style.DEFAULT)
+    dt = datetime.strptime(date, C.format('Ymd')).strftime('%a')
+
+    print(color.BOLD + color.green(dt))
 
 
 def print_restaurant(menu, restaurant):
-    print(style.BLUE + restaurants[restaurant][0] + style.DEFAULT)
+    print(color.blue(restaurants[restaurant][0]))
     if not menu:
-        print(const.DOT() + style.DIM + const.NO_MENU + style.DEFAULT)
+        print(C.dot() + color.dim(C.NO_MENU))
 
 
 def print_element(dish):
-    ingredient = const.BALLS()
+    ingredient = C.balls()
     ans = re.search(r'\b' + re.escape(ingredient)
                     + r'\b', dish, re.IGNORECASE)
 
@@ -251,7 +254,7 @@ def print_element(dish):
     if index != -1:
         print_match(dish, ingredient, index)
     else:
-        print(const.DOT() + dish)
+        print(C.dot() + dish)
 
 
 def find_index(reg):
@@ -268,24 +271,49 @@ def print_match(dish, ingredient, index):
     body = dish[index:length]
     tail = dish[length:]
 
-    print(const.DOT() + head + style.BLINK +
-          body + style.DEFAULT + tail)
+    print(C.dot() + head + color.blink(body) + tail)
 
 
 class api:
-    BASE_URL = \
+    URL = \
         'http://carbonateapiprod.azurewebsites.net/' \
         'api/v1/mealprovidingunits/'
 
     @staticmethod
-    def API_URL(restaurant, start_date, end_date):
-        return api.BASE_URL + restaurant + \
+    def url(restaurant, start_date, end_date):
+        return api.URL + restaurant + \
             '-08d558129279/dishoccurrences?' \
             'startDate=' + start_date + \
             '&endDate=' + end_date
 
 
-class style:
+class C:
+    NO_DATA = "INGEN DATA"
+    NO_MENU = "INGEN MENY"
+    PRIPPS = "J.A. Pripps"
+    LOCALE = "sv_SE.utf-8"
+
+    @staticmethod
+    def dot():
+        return C.decode('· ')
+
+    @staticmethod
+    def balls():
+        return C.decode('kötbullar')
+
+    @staticmethod
+    def decode(string):
+        return string.decode("utf-8") if six.PY2 else string
+
+    @staticmethod
+    def format(arg):
+        return {
+            'Ymd': '%Y-%m-%d',
+            'mdYHMS': '%m/%d/%Y %H:%M:%S'
+        }[arg]
+
+
+class color:
     DEFAULT = '\033[0m'
     GREEN = '\033[92m'
     BLUE = '\033[94m'
@@ -293,28 +321,21 @@ class style:
     BLINK = '\33[5m'
     DIM = '\033[2m'
 
-
-class const:
-    NO_DATA = "INGEN DATA"
-    NO_MENU = "INGEN MENY"
-    PRIPPS = "J.A. Pripps"
+    @staticmethod
+    def dim(output):
+        return color.DIM + output + color.DEFAULT
 
     @staticmethod
-    def DOT():
-        # return '· '.decode("utf-8")
-        return const.decode('· ')
+    def green(output):
+        return color.GREEN + output + color.DEFAULT
 
     @staticmethod
-    def BALLS():
-        # return 'köttbullar'.decode("utf-8")
-        return const.decode('kötbullar')
+    def blue(output):
+        return color.BLUE + output + color.DEFAULT
 
     @staticmethod
-    def decode(string):
-        if six.PY2:
-            return string.decode("utf-8")
-        elif six.PY3:
-            return string
+    def blink(output):
+        return color.BLINK + output + color.DEFAULT
 
 
 if __name__ == "__main__":
