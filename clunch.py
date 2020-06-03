@@ -40,7 +40,13 @@ def main():
 
 def get_menus():
     menus = dict()
-    num_of_days = get_param()
+
+    try:
+        arg = int(sys.argv[1:][0]) - 1
+        num_of_days = arg if arg >= 0 else 0
+    except Exception:
+        num_of_days = 0
+
     queue = build_queue()
 
     for i in range(queue.qsize()):
@@ -67,7 +73,7 @@ def build_queue():
 def get_menus_thread(queue, menus, num_of_days):
     while not queue.empty():
         restaurant = queue.get()
-        data = get_menu(restaurant, num_of_days)
+        data = request_menu(restaurant, num_of_days)
         r = restaurants[restaurant][0]
 
         if r == 'J.A. Pripps':
@@ -76,11 +82,65 @@ def get_menus_thread(queue, menus, num_of_days):
             menu = parse_menu(data)
 
         map_data(menus, menu, restaurant)
-
         queue.task_done()
 
 
-def get_menu(restaurant, num_of_days):
+def parse_menu(data):
+    rawdata = json.loads(data)
+    menu = []
+
+    for i in rawdata:
+        menu.append(format_date(i['startDate']))
+        menu.append(i['displayNames'][0]['dishDisplayName'])
+
+    return menu
+
+
+def parse_pripps_menu(data, num_of_days):
+    item = ET.fromstring(data).findall('channel/item')
+    menu = []
+    start_date, end_date = get_dates(num_of_days)
+
+    for title in item:
+        date = title.find("title").text[-10:]
+
+        for description in title:
+            for table in description:
+                for tr in table:
+                    for td in tr:
+                        dish = tr.findall("td")[1].text
+
+                        for b in td:
+                            dish_type = b.text
+
+                            if start_date <= date <= end_date:
+                                append_data(menu,
+                                            date,
+                                            dish,
+                                            dish_type)
+    return menu
+
+
+def map_data(menus, data, restaurant):
+    num_of_restaurants = len(restaurants)
+    length = len(data)
+
+    for i in range(0, length, 2):
+        date = data[i]
+        dish = data[i+1]
+
+        if date in menus:
+            menus[date][restaurant].append(dish)
+        else:
+            disharr = [[] for i in range(num_of_restaurants)]
+            disharr[restaurant].append(dish)
+            menus[date] = disharr
+
+
+# -----------------------------------------------------------------
+# HELPER FUNCTIONS
+# -----------------------------------------------------------------
+def request_menu(restaurant, num_of_days):
     url = get_url(restaurant, num_of_days)
 
     try:
@@ -116,77 +176,6 @@ def get_url(restaurant, num_of_days):
             end_date)
 
 
-def parse_menu(data):
-    rawdata = json.loads(data)
-    menu = []
-    for i in rawdata:
-        menu.append(format_date(i['startDate']))
-        menu.append(i['displayNames'][0]['dishDisplayName'])
-
-    return menu
-
-
-def parse_pripps_menu(data, num_of_days):
-    item = parse_xml(data)
-    menu = []
-    start_date, end_date = get_dates(num_of_days)
-
-    for title in item:
-        date = title.find("title").text[-10:]
-
-        for description in title:
-            for table in description:
-                for tr in table:
-                    for td in tr:
-                        dish = tr.findall("td")[1].text
-
-                        for b in td:
-                            dish_type = b.text
-
-                            if start_date <= date <= end_date:
-                                append_data(menu,
-                                            date,
-                                            dish,
-                                            dish_type)
-    return menu
-
-
-def parse_xml(data):
-    root = ET.fromstring(data)
-    return root.findall('channel/item')
-
-
-def append_data(manu, date, dish, dish_type):
-    manu.append(date)
-    manu.append(dish + color.dim(" (" + dish_type + ")"))
-
-
-def map_data(menus, data, restaurant):
-    num_of_restaurants = len(restaurants)
-    length = len(data)
-
-    for i in range(0, length, 2):
-
-        date = data[i]
-        dish = data[i+1]
-
-        if date in menus:
-            menus[date][restaurant].append(dish)
-        else:
-            disharr = [[] for i in range(num_of_restaurants)]
-            disharr[restaurant].append(dish)
-            menus[date] = disharr
-
-
-def get_param():
-    try:
-        ndays = int(sys.argv[1:][0])
-        return ndays if ndays >= 0 else 0
-
-    except Exception:
-        return 0
-
-
 def get_dates(num_of_days):
     today = datetime.today()
     end_date = (today + timedelta(days=num_of_days)) \
@@ -201,6 +190,14 @@ def format_date(date):
         date[:-3], C.format('mdYHMS')).strftime(C.format('Ymd'))
 
 
+def append_data(menu, date, dish, dish_type):
+    menu.append(date)
+    menu.append(dish + color.dim(" (" + dish_type + ")"))
+
+
+# -----------------------------------------------------------------
+# PRINT
+# -----------------------------------------------------------------
 def print_data(menus):
     if not menus:
         print('INGEN DATA')
@@ -245,14 +242,15 @@ def print_element(dish):
 
 def print_match(dish, ingredient, index):
     l = (index + len(ingredient))
-
     head = dish[0:index]
     body = dish[index:l]
     tail = dish[l:]
-
     print(C.dot(), head, color.blink(body), tail)
 
 
+# -----------------------------------------------------------------
+# CONSTANS
+# -----------------------------------------------------------------
 class api:
     URL = \
         'http://carbonateapiprod.azurewebsites.net/' \
