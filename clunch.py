@@ -33,7 +33,7 @@ restaurants = [["Expressen", '3d519481-1667-4cad-d2a3'],
 
 
 def main():
-    set_locale(C.LOCALE)
+    locale.setlocale(locale.LC_ALL, 'sv_SE.utf-8')
     menus = get_menus()
     print_data(menus)
 
@@ -70,7 +70,7 @@ def get_menus_thread(queue, menus, num_of_days):
         data = get_menu(restaurant, num_of_days)
         r = restaurants[restaurant][0]
 
-        if r == C.PRIPPS:
+        if r == 'J.A. Pripps':
             menu = parse_pripps_menu(data, num_of_days)
         else:
             menu = parse_menu(data)
@@ -105,7 +105,7 @@ def get_menu(restaurant, num_of_days):
 def get_url(restaurant, num_of_days):
     r = restaurants[restaurant][0]
 
-    if r == C.PRIPPS:
+    if r == 'J.A. Pripps':
         return restaurants[restaurant][1]
     else:
         start_date, end_date = get_dates(num_of_days)
@@ -143,9 +143,7 @@ def parse_pripps_menu(data, num_of_days):
                         for b in td:
                             dish_type = b.text
 
-                            if date_in_range(date,
-                                             start_date,
-                                             end_date):
+                            if start_date <= date <= end_date:
                                 append_data(menu,
                                             date,
                                             dish,
@@ -155,17 +153,12 @@ def parse_pripps_menu(data, num_of_days):
 
 def parse_xml(data):
     root = ET.fromstring(data)
-
     return root.findall('channel/item')
 
 
 def append_data(manu, date, dish, dish_type):
     manu.append(date)
     manu.append(dish + color.dim(" (" + dish_type + ")"))
-
-
-def date_in_range(date, start_date, end_date):
-    return start_date <= date <= end_date
 
 
 def map_data(menus, data, restaurant):
@@ -187,21 +180,17 @@ def map_data(menus, data, restaurant):
 
 def get_param():
     try:
-        p = sys.argv[1:][0]
-        i = int(p)
+        ndays = int(sys.argv[1:][0])
+        return ndays if ndays >= 0 else 0
 
-        return i if i >= 0 else 0
-
-    except IndexError:
-        return 0
-
-    except ValueError:
+    except Exception:
         return 0
 
 
 def get_dates(num_of_days):
     today = datetime.today()
-    end_date = (today + timedelta(days=num_of_days)).strftime(C.format('Ymd'))
+    end_date = (today + timedelta(days=num_of_days)) \
+        .strftime(C.format('Ymd'))
     start_date = today.strftime(C.format('Ymd'))
 
     return start_date, end_date
@@ -212,13 +201,9 @@ def format_date(date):
         date[:-3], C.format('mdYHMS')).strftime(C.format('Ymd'))
 
 
-def set_locale(code):
-    locale.setlocale(locale.LC_ALL, code)
-
-
 def print_data(menus):
     if not menus:
-        print(C.NO_DATA)
+        print('INGEN DATA')
         quit()
 
     for key in sorted(menus):
@@ -235,43 +220,37 @@ def print_data(menus):
 
 def print_date(date):
     dt = datetime.strptime(date, C.format('Ymd')).strftime('%a')
-
     print(color.BOLD + color.green(dt))
 
 
 def print_restaurant(menu, restaurant):
     print(color.blue(restaurants[restaurant][0]))
     if not menu:
-        print(C.dot() + color.dim(C.NO_MENU))
+        print(C.dot() + color.dim('INGEN MENY'))
 
 
 def print_element(dish):
-    ingredient = C.balls()
-    ans = re.search(r'\b' + re.escape(ingredient)
-                    + r'\b', dish, re.IGNORECASE)
+    ingredient = C.meatballs()
+    match = re.search(r'\b' + re.escape(ingredient)
+                      + r'\b', dish, re.IGNORECASE)
 
-    index = find_index(ans)
-    if index != -1:
-        print_match(dish, ingredient, index)
-    else:
-        print(C.dot() + dish)
-
-
-def find_index(reg):
     try:
-        return reg.start()
+        index = match.start()
     except AttributeError:
-        return -1
+        print(C.dot() + dish)
+        return
+
+    print_match(dish, ingredient, index)
 
 
 def print_match(dish, ingredient, index):
-    length = (index+len(ingredient))
+    l = (index + len(ingredient))
 
     head = dish[0:index]
-    body = dish[index:length]
-    tail = dish[length:]
+    body = dish[index:l]
+    tail = dish[l:]
 
-    print(C.dot() + head + color.blink(body) + tail)
+    print(C.dot(), head, color.blink(body), tail)
 
 
 class api:
@@ -288,17 +267,12 @@ class api:
 
 
 class C:
-    NO_DATA = "INGEN DATA"
-    NO_MENU = "INGEN MENY"
-    PRIPPS = "J.A. Pripps"
-    LOCALE = "sv_SE.utf-8"
-
     @staticmethod
     def dot():
         return C.decode('· ')
 
     @staticmethod
-    def balls():
+    def meatballs():
         return C.decode('kötbullar')
 
     @staticmethod

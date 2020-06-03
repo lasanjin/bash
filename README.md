@@ -1,6 +1,7 @@
 # Chalmers lunch CLI
 Outputs Chalmers lunch menues.
 
+
 ## Description
 Outputs Chalmers *Johanneberg*
 - Expressen
@@ -11,12 +12,16 @@ Outputs Chalmers *Johanneberg*
   
 lunch menu in terminal & highlights *Köttbullar*
 
+
+## Demo
 <img src="resources/gif-py.gif" width="640">
+
 
 ## Install
 ```
 $ curl "https://raw.githubusercontent.com/lasanjin/chalmers-lunch-cli/master/install.sh" | bash
 ```
+
 
 ## How to run
 ```
