@@ -306,7 +306,7 @@ def print_match(dish, index, _len):
     head = dish[0:index]
     body = dish[index:_len]
     tail = dish[_len:]
-    print("{}{}{}{}".format(Utils.dot(), head, Style.blink(body), tail))
+    print(Utils.dot() + head + Style.blink(body) + tail)
 
 
 if __name__ == "__main__":
