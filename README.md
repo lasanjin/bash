@@ -1,5 +1,5 @@
 # Chalmers lunch CLI
-Outputs Chalmers lunch menues.
+Outputs Chalmers lunch menus.
 
 
 ## Description
@@ -10,7 +10,7 @@ Outputs Chalmers *Johanneberg*
 - S.M.A.K
 - J.A. Pripps
   
-lunch menu in terminal & highlights *Köttbullar*
+lunch menu in terminal & highlights *Köttbullar* or *Meatballs*
 
 
 ## Demo
@@ -25,14 +25,10 @@ $ curl "https://raw.githubusercontent.com/lasanjin/chalmers-lunch-cli/master/ins
 
 ## How to run
 ```
-$ clunch
+$ clunch $1
 ```
 
 - `$1`
   -  *optional* 
-  -  number of days from today, default is today's menus
+  -  number of days (default is today's menus)
   -  input `0-9`
-
-
-## [Linux](resources/README.md)
-Open link for instructions on how to run bash script [*expressen.sh*](expressen.sh)
