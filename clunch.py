@@ -39,7 +39,7 @@ def main():
     except Exception:
         num_of_days = 0
 
-    info = Style.style("[INFO]", "green", [])
+    info = Style.style("[INFO]", "green")
     print(info, "FETCHING DATA...")
 
     menus = get_menus(num_of_days)
