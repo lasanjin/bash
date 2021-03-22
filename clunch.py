@@ -6,8 +6,6 @@ from datetime import datetime
 from datetime import timedelta
 from threading import Thread
 import xml.etree.ElementTree as ET
-import xml.dom.minidom
-import urllib3
 import locale
 import json
 import sys
