@@ -153,8 +153,8 @@ def request_menu(i, http, num_of_days):
             url=url,
             preload_content=False,
             retries=urllib3.Retry(10),
-            timeout=urllib3.Timeout(10)
-        )
+            timeout=urllib3.Timeout(10))
+
         status_code = res.status
 
         if status_code == 200:
