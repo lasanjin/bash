@@ -1,7 +1,5 @@
 # Chalmers Lunch CLI
-Outputs Chalmers lunch menus.
 
-## Description
 Outputs Chalmers *Johanneberg*
 - Expressen
 - Kårrestaurangen
@@ -9,7 +7,7 @@ Outputs Chalmers *Johanneberg*
 - S.M.A.K
 - J.A. Pripps
   
-lunch menu in terminal & highlights *Köttbullar* or *Meatballs*
+lunch menu in terminal & highlights *Köttbullar* or *Meatballs*.
 
 ## Demo
 <img src="resources/gif-py.gif" width="640">
