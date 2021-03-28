@@ -37,7 +37,7 @@ def main():
     except Exception:
         num_of_days = 0
 
-    info = Style.style("[INFO]", "green")
+    info = Utils.style("[INFO]", "green")
     print(info, "FETCHING DATA...")
 
     menus = get_menus(num_of_days)
@@ -178,7 +178,7 @@ def format_date(date):
 
 def append_data(menu, date, dish, dish_type):
     menu.append(date)
-    menu.append(dish + Style.style(" (" + dish_type + ")", None, ['dim']))
+    menu.append(dish + Utils.style(" (" + dish_type + ")", None, ['dim']))
 
 
 def find_match(dish):
@@ -217,31 +217,22 @@ class Utils:
             'mdYHMS': '%m/%d/%Y %H:%M:%S'
         }[arg]
 
-
-class Style:
-    DEFAULT = '\033[0m'
-    GREEN = '\033[92m'
-    BLUE = '\033[94m'
-    BOLD = "\033[1m"
-    BLINK = '\33[5m'
-    DIM = '\033[2m'
-
     @staticmethod
     def style(output, color, styles=[]):
         if color is not None:
             output = {
-                'green': Style.GREEN + '%s',
-                'blue': Style.BLUE + '%s',
+                'green': '\033[92m%s',
+                'blue': '\033[94m%s',
             }[color] % output
 
         for style in styles:
             output = {
-                'blink': Style.BLINK + '%s',
-                'bold': Style.BOLD + '%s',
-                'dim': Style.DIM + '%s'
+                'blink': '\33[5m%s',
+                'bold': '\033[1m%s',
+                'dim': '\033[2m%s'
             }[style] % output
 
-        return output + Style.DEFAULT
+        return output + '\033[0m'  # default
 
 
 # -----------------------------------------------------------------
@@ -253,12 +244,12 @@ def print_data(menus):
     for date in sorted(menus):
         print()
         day = datetime.strptime(date, Utils.format('Ymd')).strftime('%a')
-        print(Style.style(day, 'green', ['bold']))
+        print(Utils.style(day, 'green', ['bold']))
         # print restaurant
         for restaurant, menu in enumerate(menus[date]):
-            print(Style.style(RESTAURANTS[restaurant][0], 'blue'))
+            print(Utils.style(RESTAURANTS[restaurant][0], 'blue'))
             if not menu:
-                print(dot + Style.style('INGEN MENY', None, ['dim']))
+                print(dot + Utils.style('INGEN MENY', None, ['dim']))
             else:
                 # print dish
                 for dish in menu:
@@ -272,7 +263,7 @@ def print_data(menus):
                         body = dish[index:_len]
                         tail = dish[_len:]
                         print(
-                            dot + head + Style.style(body, None, ['blink']) + tail)
+                            dot + head + Utils.style(body, None, ['blink']) + tail)
     print()
 
 
