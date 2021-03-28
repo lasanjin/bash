@@ -23,8 +23,8 @@ $ clunch $1
 ```
 
 - `$1`
-  -  *optional* 
-  -  number of days (default is today's menus)
-  -  input `0-9`
+  -  *Optional* 
+  -  Number of days (Default is today's menus)
+     -  `0-9`
 
 ## [Bash](/bash)
